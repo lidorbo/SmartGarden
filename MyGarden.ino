@@ -44,6 +44,8 @@
 
 #define READINGS_NUMBER 50
 #define DELAY_TIME 30
+#define WET 140
+#define DRY 570
 
 const long utcOffsetInSeconds = 10800;
 
@@ -61,7 +63,6 @@ struct {
 
 bool isConnect = false;
 const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
-int sensorValue = 0;  // value read from the pot
 const int pinD2 = D2;
 const int pinD3 = D3;
 const int dhtPin = 12;
@@ -85,31 +86,35 @@ void setup() {
   pinMode(relayPin, OUTPUT_OPEN_DRAIN);
 
   dht.begin();
-  
-
 }
 
-String msg;
+int sensorValue1 = 0;  // value read from the pot
+int sensorValue2 = 0;  // value read from the pot
+
+//Always keeps the soil between those values
+int wetSoilMaxPrecnt = 80; // We want to watering until we get this value, when we get it stop the pump
+int wetSoilMinPrecnt = 35; // When we get this value or lower we must water the plantes until we get to max value.
 
 void loop() {
 
  if(WiFi.status() == WL_CONNECTED)
  {
    
-   sensorValue = readAnalogSensor1();
-   Firebase.setFloat("moistureSensor1", sensorValue);
+   sensorValue1 = readAnalogSensor1();
+   sensorValue1 = map(sensorValue1, WET, DRY, 100, 0);
+   Firebase.setFloat("moistureSensor1", sensorValue1);
 
   // print the readings in the Serial Monitor
   Serial.println("sensor 1 = ");
-  Serial.println(sensorValue);
+  Serial.println(sensorValue1);
 
   delay(100);
-  sensorValue = readAnalogSensor2();//analogRead(analogInPin);
-
-  Firebase.setFloat("moistureSensor2", sensorValue);
+  sensorValue2 = readAnalogSensor2();//analogRead(analogInPin);
+  sensorValue2 = map(sensorValue2, WET, DRY, 100, 0);
+  Firebase.setFloat("moistureSensor2", sensorValue2);
 
   Serial.println("sensor 2 = ");
-  Serial.println(sensorValue);
+  Serial.println(sensorValue2);
   timeClient.update();
 
  /* Serial.print(daysOfTheWeek[timeClient.getDay()]);
