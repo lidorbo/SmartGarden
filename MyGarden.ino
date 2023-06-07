@@ -66,8 +66,10 @@ const int analogInPin = A0;  // ESP8266 Analog Pin ADC0 = A0
 const int pinD2 = D2;
 const int pinD3 = D3;
 const int dhtPin = 12;
+const int waterLevelPin = 2;   
 const int relayPin = 14;
 char realyState = 0;
+
 
 DHT dht(dhtPin, DHT11);
 
@@ -84,6 +86,7 @@ void setup() {
   pinMode(pinD3, OUTPUT);
   pinMode(analogInPin, INPUT);
   pinMode(relayPin, OUTPUT_OPEN_DRAIN);
+  pinMode(waterLevelPin, INPUT);   
 
   dht.begin();
 }
@@ -94,7 +97,8 @@ int sensorValue2 = 0;  // value read from the pot
 //Always keeps the soil between those values
 int wetSoilMaxPrecnt = 80; // We want to watering until we get this value, when we get it stop the pump
 int wetSoilMinPrecnt = 35; // When we get this value or lower we must water the plantes until we get to max value.
-
+int waterLevelOk = 0;
+ 
 void loop() {
 
  if(WiFi.status() == WL_CONNECTED)
@@ -132,6 +136,10 @@ void loop() {
   Firebase.setInt("temperature", dht.readTemperature());
   Firebase.setInt("humidity", dht.readHumidity());
 
+  waterLevelOk = digitalRead(waterLevelPin);   // read the input pin
+  Serial.println("Water level " + String(waterLevelOk));
+  Firebase.setInt("waterLevelOk", waterLevelOk);
+
   // handle error
    if (Firebase.failed()) {
       Serial.print("setting /number failed:");
@@ -168,6 +176,8 @@ void loop() {
       digitalWrite(relayPin, HIGH);
    	  realyState = HIGH;
    }
+
+
 
     delay(1000);
  }
